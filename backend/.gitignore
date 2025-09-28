@@ -1,0 +1,17 @@
+# .NET
+Api/bin/
+Api/obj/
+
+# SQLite runtime files
+Api/AppData/*.db
+Api/AppData/*.sqlite
+Api/AppData/*.db-shm
+Api/AppData/*.db-wal
+Api/AppData/*.sqlite-shm
+Api/AppData/*.sqlite-wal
+
+# Local env
+.env
+*.env
+*.user
+*.swp
