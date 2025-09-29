@@ -35,13 +35,15 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("app", p => p
-        .WithOrigins(allowed.Length > 0
-            ? allowed
-            : new[] { "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173" })
+        .SetIsOriginAllowed(origin =>
+            origin.StartsWith("http://localhost") ||
+            origin.StartsWith("https://localhost") ||
+            origin.EndsWith(".vercel.app"))  //vercelin alternatif URL'lerini de kabul etmek için böyle bir şey ekledim
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials());
 });
+
 
 var app = builder.Build();
 
