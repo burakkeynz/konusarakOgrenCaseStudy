@@ -1,0 +1,69 @@
+# --- Node / React ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Env (örnek dosyayı bırak, gerçek env'leri sakla)
+.env
+*.env.local
+.env.*.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / Temp
+coverage/
+tmp/
+*.swp
+*.pid
+
+# --- React Native build çıktıları ---
+# iOS
+ios/build/
+ios/DerivedData/
+ios/.bundle/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/*.xcworkspace/xcuserdata/
+# CocoaPods (Podfile.lock'u commit et, Pods klasörünü etme)
+ios/Pods/
+
+# RN bundle artefactları
+ios/main.jsbundle
+ios/*.map
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
+android/captures/
+android/.settings/
+
+# Android bundle artefactları
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/assets/index.android.bundle.map
+
+# Keystore'lar (asla repoya konmaz)
+**/*.keystore
+**/*.jks
+android/app/*.keystore
+android/app/*.keystore.properties
+
+# Buck / Flipper (bazı projelerde)
+.buckd/
+buck-out/
+
+# Metro cache (nadiren proje içine düşer)
+.expo/
+.expo-shared/
