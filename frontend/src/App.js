@@ -39,6 +39,9 @@ export default function App() {
   const messagesRef = useRef(null);
   const bottomRef = useRef(null);
 
+  const usersRef = useRef([]);
+  const aliasMapRef = useRef({});
+
   // helpers
   async function readJson(res, label) {
     const txt = await res.text();
@@ -74,33 +77,35 @@ export default function App() {
 
   // id için alias'ı tek yerden çöz (cache -> users/peer -> msg -> #id)
   function getAliasFor(otherId, aliasFromMsg) {
-    const fromCache = aliasMap[otherId];
+    const fromCache = aliasMapRef.current[otherId];
     if (fromCache) return fromCache;
 
     const fromUsers =
-      users.find((u) => u.id === otherId)?.alias ||
+      usersRef.current.find((u) => u.id === otherId)?.alias ||
       (peer && peer.id === otherId ? peer.alias : null);
     if (fromUsers) {
+      const next = { ...aliasMapRef.current, [otherId]: fromUsers };
+      aliasMapRef.current = next;
       setAliasMap((m) => ({ ...m, [otherId]: fromUsers }));
       return fromUsers;
     }
 
     if (aliasFromMsg) {
+      const next = { ...aliasMapRef.current, [otherId]: aliasFromMsg };
+      aliasMapRef.current = next;
       setAliasMap((m) => ({ ...m, [otherId]: aliasFromMsg }));
       return aliasFromMsg;
     }
 
-    // bir defalık users yenilemesi (arka planda cache'i doldurur)
     setTimeout(() => {
       fetch(`${API}/users`)
         .then((r) => (r.ok ? r.json() : []))
         .then((arr) => {
           if (Array.isArray(arr)) {
-            setAliasMap((m) => {
-              const copy = { ...m };
-              for (const u of arr) copy[u.id] = u.alias;
-              return copy;
-            });
+            const next = { ...aliasMapRef.current };
+            for (const u of arr) next[u.id] = u.alias;
+            aliasMapRef.current = next;
+            setAliasMap(next);
           }
         })
         .catch(() => {});
@@ -118,11 +123,11 @@ export default function App() {
         const list = await readJson(res, "GET /users");
         setUsers(Array.isArray(list) ? list : []);
         if (Array.isArray(list)) {
-          setAliasMap((m) => {
-            const copy = { ...m };
-            for (const u of list) copy[u.id] = u.alias;
-            return copy;
-          });
+          usersRef.current = list;
+          const next = { ...aliasMapRef.current };
+          for (const u of list) next[u.id] = u.alias;
+          aliasMapRef.current = next;
+          setAliasMap(next);
         }
       } catch (e) {
         console.error(e);
@@ -133,6 +138,7 @@ export default function App() {
   // users güncellenince sol listedeki aliaslar refresh
   useEffect(() => {
     if (users.length === 0) return;
+    usersRef.current = users;
     setChats((prev) =>
       prev.map((c) => {
         if (!c?.peer) return c;
