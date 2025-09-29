@@ -18,7 +18,7 @@ Bu repo Konuşarak Öğren Full Stack + AI Case Study adına oluşturulmuştur. 
 ## User Rolleri and Yapabilecekleri
 
 **Kullanıcılar**
--Alias isim yazılarak giriş yapabilir, başka kişilerle chatleşebilir. Daha önce bi sohbet olusturmamıssa bunu olusturabilir. Daha önce o kişiden gelen mesajları okumamışsa bunu badge ile birlikte görebilir.
+-Alias isim yazılarak giriş yapabilir, başka kişilerle chatleşebilir.Chatleşirken yazmış olduğu ve karşıdan gelen mesajlarının olumlu, olumsuz veya nötr olup olmadığını AI analiziyle görebilir. Daha önce bi sohbet olusturmamıssa bunu olusturabilir. Daha önce o kişiden gelen mesajları okumamışsa bunu badge ile birlikte görebilir.
 
 > Not: Burdaki Authentication oldukça basit bırakılmıştır (istenen üzerine sadece rümuz-alias ile giriş vardır), gerçek bir appte HTTP-Cookie bazlı Session ile kaydedilmelidir, aliaslar localStorage ile basitçe tutulmuştur (JWT amaçlı, süresiz, çıkış yap diyince çıkış olan)
 
