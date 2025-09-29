@@ -27,6 +27,9 @@ export default function App() {
   // unread badge
   const [unread, setUnread] = useState({});
 
+  // alias cache (id -> alias)
+  const [aliasMap, setAliasMap] = useState({});
+
   // signalR
   const [conn, setConn] = useState(null);
   const prevPeerRef = useRef(null);
@@ -69,6 +72,43 @@ export default function App() {
     setConn(null);
   }
 
+  // id için alias'ı tek yerden çöz (cache -> users/peer -> msg -> #id)
+  function getAliasFor(otherId, aliasFromMsg) {
+    const fromCache = aliasMap[otherId];
+    if (fromCache) return fromCache;
+
+    const fromUsers =
+      users.find((u) => u.id === otherId)?.alias ||
+      (peer && peer.id === otherId ? peer.alias : null);
+    if (fromUsers) {
+      setAliasMap((m) => ({ ...m, [otherId]: fromUsers }));
+      return fromUsers;
+    }
+
+    if (aliasFromMsg) {
+      setAliasMap((m) => ({ ...m, [otherId]: aliasFromMsg }));
+      return aliasFromMsg;
+    }
+
+    // bir defalık users yenilemesi (arka planda cache'i doldurur)
+    setTimeout(() => {
+      fetch(`${API}/users`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((arr) => {
+          if (Array.isArray(arr)) {
+            setAliasMap((m) => {
+              const copy = { ...m };
+              for (const u of arr) copy[u.id] = u.alias;
+              return copy;
+            });
+          }
+        })
+        .catch(() => {});
+    }, 0);
+
+    return `#${otherId}`;
+  }
+
   // login users çek
   useEffect(() => {
     if (userId <= 0) return;
@@ -77,6 +117,13 @@ export default function App() {
         const res = await fetch(`${API}/users`);
         const list = await readJson(res, "GET /users");
         setUsers(Array.isArray(list) ? list : []);
+        if (Array.isArray(list)) {
+          setAliasMap((m) => {
+            const copy = { ...m };
+            for (const u of list) copy[u.id] = u.alias;
+            return copy;
+          });
+        }
       } catch (e) {
         console.error(e);
       }
@@ -117,18 +164,14 @@ export default function App() {
             ? m.senderAlias ?? m.SenderAlias
             : m.receiverAlias ?? m.ReceiverAlias) || null;
 
-        const otherUser = users.find((u) => u.id === other) ||
-          (peer && peer.id === other ? peer : null) || {
-            id: other,
-            alias: aliasFromMsg || `#${other}`,
-          };
+        const aliasResolved = getAliasFor(other, aliasFromMsg);
 
         const createdAt = new Date(m.createdAt ?? m.CreatedAt ?? Date.now());
         const last = map.get(other);
 
         if (!last || createdAt > last.lastAt) {
           map.set(other, {
-            peer: { id: otherUser.id, alias: otherUser.alias },
+            peer: { id: other, alias: aliasResolved },
             lastText: (m.text ?? m.Text) || "",
             lastAt: createdAt,
           });
@@ -255,14 +298,10 @@ export default function App() {
                   ? msg.senderAlias ?? msg.SenderAlias
                   : msg.receiverAlias ?? msg.ReceiverAlias) || null;
 
-              const otherUser = users.find((u) => u.id === other) ||
-                (peer && peer.id === other ? peer : null) || {
-                  id: other,
-                  alias: aliasFromMsg || `#${other}`,
-                };
+              const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
-                peer: { id: otherUser.id, alias: otherUser.alias },
+                peer: { id: other, alias: aliasResolved },
                 lastText: (msg.text ?? msg.Text) || "",
                 lastAt,
               });
@@ -305,14 +344,10 @@ export default function App() {
                   ? message.senderAlias ?? message.SenderAlias
                   : message.receiverAlias ?? message.ReceiverAlias) || null;
 
-              const otherUser = users.find((u) => u.id === other) ||
-                (peer && peer.id === other ? peer : null) || {
-                  id: other,
-                  alias: aliasFromMsg || `#${other}`,
-                };
+              const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
-                peer: { id: otherUser.id, alias: otherUser.alias },
+                peer: { id: other, alias: aliasResolved },
                 lastText: (message.text ?? message.Text) || "",
                 lastAt,
               });
