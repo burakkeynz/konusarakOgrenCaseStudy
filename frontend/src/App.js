@@ -432,7 +432,9 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, receiverId: peer.id, text: t }),
       }).then((r) => readJson(r, "POST /messages"));
-      setText(""); // balon SignalR ile düşecek
+
+      setText("");
+      requestAnimationFrame(() => scrollToBottom("smooth"));
     } catch (e) {
       alert(e.message || String(e));
     } finally {
