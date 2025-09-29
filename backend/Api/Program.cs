@@ -155,7 +155,10 @@ app.MapPost("/messages", async (
         m.Text,
         m.SentimentLabel ?? "NEUTRAL",
         m.SentimentScore ?? 0.0,
-        m.CreatedAt);
+        m.CreatedAt,
+        sender.Alias,          
+        receiver.Alias         
+    );
 
     await hub.Clients
              .Group(ChatHub.ThreadKey(m.UserId, m.ReceiverId))
@@ -193,13 +196,17 @@ app.MapGet("/messages", async (string? alias, int? userId, int? limit, AppDbCont
         .OrderByDescending(m => m.Id)
         .Take(take)
         .Select(m => new MessageResponse(
-            m.Id,
-            m.UserId,
-            m.ReceiverId,
-            m.Text,
-            m.SentimentLabel ?? "NEUTRAL",
-            m.SentimentScore ?? 0.0,
-            m.CreatedAt))
+        m.Id,
+        m.UserId,
+        m.ReceiverId,
+        m.Text,
+        m.SentimentLabel ?? "NEUTRAL",
+        m.SentimentScore ?? 0.0,
+        m.CreatedAt,
+        db.Users.Where(u => u.Id == m.UserId).Select(u => u.Alias).FirstOrDefault() ?? $"#{m.UserId}",
+        db.Users.Where(u => u.Id == m.ReceiverId).Select(u => u.Alias).FirstOrDefault() ?? $"#{m.ReceiverId}"
+    ))
+
         .ToListAsync();
 
     return Results.Ok(list);
@@ -224,7 +231,10 @@ app.MapGet("/messages/thread", async (int userA, int userB, int? limit, AppDbCon
             m.Text,
             m.SentimentLabel ?? "NEUTRAL",
             m.SentimentScore ?? 0.0,
-            m.CreatedAt))
+            m.CreatedAt,
+            db.Users.Where(u => u.Id == m.UserId).Select(u => u.Alias).FirstOrDefault() ?? $"#{m.UserId}",
+            db.Users.Where(u => u.Id == m.ReceiverId).Select(u => u.Alias).FirstOrDefault() ?? $"#{m.ReceiverId}"
+            ))
         .ToListAsync();
 
     return Results.Ok(list);
