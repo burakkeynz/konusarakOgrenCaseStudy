@@ -99,24 +99,33 @@ export default function App() {
     );
   }, [users]);
 
-  // mesajlardan sohbet listesi üret
   async function refreshChats() {
     try {
       const res = await fetch(`${API}/messages?userId=${userId}&limit=500`);
       const list = await readJson(res, "GET /messages");
+
       const map = new Map();
+
       for (const m of list || []) {
         const me = Number(userId);
         const uid = Number(m.userId ?? m.UserId);
         const rid = Number(m.receiverId ?? m.ReceiverId);
         const other = uid === me ? rid : uid;
 
-        const otherUser = users.find((u) => u.id === other) || {
-          id: other,
-          alias: `#${other}`,
-        };
+        const aliasFromMsg =
+          (uid === other
+            ? m.senderAlias ?? m.SenderAlias
+            : m.receiverAlias ?? m.ReceiverAlias) || null;
+
+        const otherUser = users.find((u) => u.id === other) ||
+          (peer && peer.id === other ? peer : null) || {
+            id: other,
+            alias: aliasFromMsg || `#${other}`,
+          };
+
         const createdAt = new Date(m.createdAt ?? m.CreatedAt ?? Date.now());
         const last = map.get(other);
+
         if (!last || createdAt > last.lastAt) {
           map.set(other, {
             peer: { id: otherUser.id, alias: otherUser.alias },
@@ -125,16 +134,18 @@ export default function App() {
           });
         }
       }
+
       const arr = Array.from(map.values()).sort((a, b) => b.lastAt - a.lastAt);
       setChats(arr);
 
-      // önceki seçimi geri yükle (önceden sohbet varsa)
+      // önceki seçimi geri yükleme
       const lastPeerId = parseInt(
         localStorage.getItem("lastPeerId") || "0",
         10
       );
-      if (lastPeerId && arr.some((c) => c.peer.id === lastPeerId)) {
-        setPeer(arr.find((c) => c.peer.id === lastPeerId).peer);
+      if (lastPeerId) {
+        const found = arr.find((c) => c.peer.id === lastPeerId);
+        if (found) setPeer(found.peer);
       }
     } catch (e) {
       console.error(e);
@@ -227,6 +238,7 @@ export default function App() {
           }
 
           const lastAt = new Date(msg.createdAt ?? msg.CreatedAt ?? Date.now());
+
           setChats((prev) => {
             const copy = prev.slice();
             const i = copy.findIndex((c) => c.peer.id === other);
@@ -238,10 +250,17 @@ export default function App() {
               };
               return copy.sort((a, b) => b.lastAt - a.lastAt);
             } else {
-              const otherUser = users.find((u) => u.id === other) || {
-                id: other,
-                alias: `#${other}`,
-              };
+              const aliasFromMsg =
+                (from === other
+                  ? msg.senderAlias ?? msg.SenderAlias
+                  : msg.receiverAlias ?? msg.ReceiverAlias) || null;
+
+              const otherUser = users.find((u) => u.id === other) ||
+                (peer && peer.id === other ? peer : null) || {
+                  id: other,
+                  alias: aliasFromMsg || `#${other}`,
+                };
+
               copy.unshift({
                 peer: { id: otherUser.id, alias: otherUser.alias },
                 lastText: (msg.text ?? msg.Text) || "",
@@ -261,6 +280,7 @@ export default function App() {
 
           const active =
             livePeerRef.current && Number(livePeerRef.current.id) === other;
+
           if (!active) {
             setUnread((u) => ({ ...u, [other]: (u[other] || 0) + 1 }));
           }
@@ -268,6 +288,7 @@ export default function App() {
           const lastAt = new Date(
             message.createdAt ?? message.CreatedAt ?? Date.now()
           );
+
           setChats((prev) => {
             const copy = prev.slice();
             const i = copy.findIndex((c) => c.peer.id === other);
@@ -279,10 +300,17 @@ export default function App() {
               };
               return copy.sort((a, b) => b.lastAt - a.lastAt);
             } else {
-              const otherUser = users.find((u) => u.id === other) || {
-                id: other,
-                alias: `#${other}`,
-              };
+              const aliasFromMsg =
+                (from === other
+                  ? message.senderAlias ?? message.SenderAlias
+                  : message.receiverAlias ?? message.ReceiverAlias) || null;
+
+              const otherUser = users.find((u) => u.id === other) ||
+                (peer && peer.id === other ? peer : null) || {
+                  id: other,
+                  alias: aliasFromMsg || `#${other}`,
+                };
+
               copy.unshift({
                 peer: { id: otherUser.id, alias: otherUser.alias },
                 lastText: (message.text ?? message.Text) || "",
