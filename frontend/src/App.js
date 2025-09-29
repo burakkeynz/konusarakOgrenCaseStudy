@@ -165,10 +165,10 @@ export default function App() {
         const rid = Number(m.receiverId ?? m.ReceiverId);
         const other = uid === me ? rid : uid;
 
-        const aliasFromMsg =
-          (uid === other
-            ? m.senderAlias ?? m.SenderAlias
-            : m.receiverAlias ?? m.ReceiverAlias) || null;
+        const otherIsReceiver = other === rid;
+        const aliasFromMsg = otherIsReceiver
+          ? m.receiverAlias ?? m.ReceiverAlias ?? null
+          : m.senderAlias ?? m.SenderAlias ?? null;
 
         const aliasResolved = getAliasFor(other, aliasFromMsg);
 
@@ -299,11 +299,10 @@ export default function App() {
               };
               return copy.sort((a, b) => b.lastAt - a.lastAt);
             } else {
-              const aliasFromMsg =
-                (from === other
-                  ? msg.senderAlias ?? msg.SenderAlias
-                  : msg.receiverAlias ?? msg.ReceiverAlias) || null;
-
+              const otherIsReceiver = other === to;
+              const aliasFromMsg = otherIsReceiver
+                ? msg.receiverAlias ?? msg.ReceiverAlias ?? null
+                : msg.senderAlias ?? msg.SenderAlias ?? null;
               const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
@@ -345,11 +344,10 @@ export default function App() {
               };
               return copy.sort((a, b) => b.lastAt - a.lastAt);
             } else {
-              const aliasFromMsg =
-                (from === other
-                  ? message.senderAlias ?? message.SenderAlias
-                  : message.receiverAlias ?? message.ReceiverAlias) || null;
-
+              const otherIsReceiver = other === to;
+              const aliasFromMsg = otherIsReceiver
+                ? message.receiverAlias ?? message.ReceiverAlias ?? null
+                : message.senderAlias ?? message.SenderAlias ?? null;
               const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
