@@ -152,6 +152,19 @@ export default function App() {
     );
   }, [users]);
 
+  // aliasMap değiştiğinde, mevcut kartlardaki #id alias'larını geriye dönük düzelt
+  useEffect(() => {
+    setChats((prev) =>
+      prev.map((c) => {
+        const fixed = aliasMapRef.current[c.peer.id] || aliasMap[c.peer.id];
+        if (fixed && c.peer?.alias !== fixed) {
+          return { ...c, peer: { ...c.peer, alias: fixed } };
+        }
+        return c;
+      })
+    );
+  }, [aliasMap]);
+
   async function refreshChats() {
     try {
       const res = await fetch(`${API}/messages?userId=${userId}&limit=500`);
@@ -303,6 +316,13 @@ export default function App() {
               const aliasFromMsg = otherIsReceiver
                 ? msg.receiverAlias ?? msg.ReceiverAlias ?? null
                 : msg.senderAlias ?? msg.SenderAlias ?? null;
+
+              if (aliasFromMsg && aliasMapRef.current[other] !== aliasFromMsg) {
+                const next = { ...aliasMapRef.current, [other]: aliasFromMsg };
+                aliasMapRef.current = next;
+                setAliasMap(next);
+              }
+
               const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
@@ -348,6 +368,13 @@ export default function App() {
               const aliasFromMsg = otherIsReceiver
                 ? message.receiverAlias ?? message.ReceiverAlias ?? null
                 : message.senderAlias ?? message.SenderAlias ?? null;
+
+              if (aliasFromMsg && aliasMapRef.current[other] !== aliasFromMsg) {
+                const next = { ...aliasMapRef.current, [other]: aliasFromMsg };
+                aliasMapRef.current = next;
+                setAliasMap(next);
+              }
+
               const aliasResolved = getAliasFor(other, aliasFromMsg);
 
               copy.unshift({
