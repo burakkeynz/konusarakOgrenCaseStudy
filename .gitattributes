@@ -1,0 +1,18 @@
+# ==== EXCLUDE MOBILE FROM LANGUAGE STATS ====
+# mobile kısmındaki CMake gibi benim y  azmadıgım defaul dillerin çıkmasını istediğim içn bunu ekliyorum
+mobile/**                 linguist-vendored
+mobile/Mobile/**          linguist-vendored
+
+# (Opsiyonel) Mobilde sık görülen üretim klasörlerini de açıkça işaretle
+mobile/**/build/**        linguist-generated
+mobile/**/dist/**         linguist-generated
+mobile/**/Pods/**         linguist-vendored
+mobile/**/node_modules/** linguist-vendored
+
+# ==== KEEP THESE COUNTED (explicit, not strictly required) ====
+ai-service/**             linguist-detectable=true
+frontend/**               linguist-detectable=true
+backend/**                linguist-detectable=true
+
+# (Opsiyonel) TSX dosyalarını TypeScript olarak zorla sınıflandır
+*.tsx                     linguist-language=TypeScript
